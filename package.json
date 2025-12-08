@@ -1,0 +1,24 @@
+{
+  "name": "logwise-ai",
+  "version": "1.0.0",
+  "description": "LogWise AI - Error Detection & Resolver Tool",
+  "private": true,
+  "workspaces": [
+    "client",
+    "api",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:api": "cd api && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "npm run build && cd api && cross-env NODE_ENV=production npm run start",
+    "install:all": "npm install && cd client && npm install && cd ../api && npm install && cd ../shared && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  }
+}
+
