@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Database,
   FileText,
   FolderOpen,
   LogOut,
@@ -228,6 +229,42 @@ const DashboardLayout = ({ children }) => {
                 <FileText className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
                 {!sidebarCollapsed && <span className="text-sm">Analyze Error</span>}
                 {sidebarCollapsed && isActive('/analyze') && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                )}
+              </Link>
+              <Link
+                to="/optimize-query"
+                className={`group relative flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} ${
+                  sidebarCollapsed ? 'px-2 py-3' : 'px-4 py-2'
+                } rounded-md transition-colors ${
+                  isActive('/optimize-query')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? 'Optimize Query' : ''}
+              >
+                <Database className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
+                {!sidebarCollapsed && <span className="text-sm">Optimize Query</span>}
+                {sidebarCollapsed && isActive('/optimize-query') && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                )}
+              </Link>
+              <Link
+                to="/query-optimize-logs"
+                className={`group relative flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} ${
+                  sidebarCollapsed ? 'px-2 py-3' : 'px-4 py-2'
+                } rounded-md transition-colors ${
+                  isActive('/query-optimize-logs')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? 'Query Optimization Logs' : ''}
+              >
+                <Database className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
+                {!sidebarCollapsed && <span className="text-sm">Query Logs</span>}
+                {sidebarCollapsed && isActive('/query-optimize-logs') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                 )}
               </Link>

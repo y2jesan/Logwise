@@ -6,8 +6,10 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Logs from './pages/Logs';
+import OptimizeQuery from './pages/OptimizeQuery';
 import Profile from './pages/Profile';
 import Projects from './pages/Projects';
+import QueryOptimizeLogs from './pages/QueryOptimizeLogs';
 import Register from './pages/Register';
 import Services from './pages/Services';
 import Settings from './pages/Settings';
@@ -87,6 +89,22 @@ function App() {
         element={
           <ProtectedRoute>
             <AnalyzeError />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/optimize-query"
+        element={
+          <ProtectedRoute>
+            <OptimizeQuery />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/query-optimize-logs"
+        element={
+          <ProtectedRoute>
+            <QueryOptimizeLogs />
           </ProtectedRoute>
         }
       />

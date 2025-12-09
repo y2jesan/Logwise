@@ -1,20 +1,17 @@
-import { AlertTriangle, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Database, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import LogCard from '../components/LogCard';
+import QueryOptimizeLogCard from '../components/QueryOptimizeLogCard';
 import Button from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import api from '../lib/api';
-import useAuthStore from '../store/authStore';
 
-const Logs = () => {
-  const { user } = useAuthStore();
+const QueryOptimizeLogs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [logs, setLogs] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -24,10 +21,8 @@ const Logs = () => {
   });
   const [filters, setFilters] = useState({
     project_id: '',
-    service_id: '',
     startDate: '',
-    endDate: '',
-    type: ''
+    endDate: ''
   });
 
   useEffect(() => {
@@ -37,25 +32,17 @@ const Logs = () => {
   useEffect(() => {
     // Get filters and page from URL query params
     const projectId = searchParams.get('project_id') || '';
-    const serviceId = searchParams.get('service_id') || '';
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
-    const type = searchParams.get('type') || '';
     const page = parseInt(searchParams.get('page')) || 1;
-
+    
     setFilters({
       project_id: projectId,
-      service_id: serviceId,
       startDate,
-      endDate,
-      type
+      endDate
     });
     setPagination(prev => ({ ...prev, page }));
   }, [searchParams]);
-
-  useEffect(() => {
-    fetchServices();
-  }, [filters.project_id]);
 
   useEffect(() => {
     fetchLogs();
@@ -70,40 +57,23 @@ const Logs = () => {
     }
   };
 
-  const fetchServices = async () => {
-    try {
-      const query = filters.project_id ? `?project_id=${filters.project_id}` : '';
-      const response = await api.get(`/services${query}`);
-      setServices(response.data);
-
-      // Clear service filter if selected service is not in the filtered list
-      if (filters.service_id && !response.data.find(s => s._id === filters.service_id)) {
-        handleFilterChange('service_id', '');
-      }
-    } catch (error) {
-      console.error('Error fetching services:', error);
-    }
-  };
-
   const fetchLogs = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filters.project_id) params.append('project_id', filters.project_id);
-      if (filters.service_id) params.append('service_id', filters.service_id);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
-      if (filters.type) params.append('type', filters.type);
       params.append('limit', '20');
       params.append('page', pagination.page.toString());
 
-      const response = await api.get(`/logs?${params.toString()}`);
+      const response = await api.get(`/webhook/optimize-query?${params.toString()}`);
       setLogs(response.data.logs || response.data);
       if (response.data.pagination) {
         setPagination(response.data.pagination);
       }
     } catch (error) {
-      console.error('Error fetching logs:', error);
+      console.error('Error fetching query optimization logs:', error);
     } finally {
       setLoading(false);
     }
@@ -112,15 +82,13 @@ const Logs = () => {
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-
+    
     // Reset to page 1 when filters change
     setPagination(prev => ({ ...prev, page: 1 }));
-
+    
     // Update URL params
     const params = new URLSearchParams();
     if (newFilters.project_id) params.set('project_id', newFilters.project_id);
-    if (newFilters.service_id) params.set('service_id', newFilters.service_id);
-    if (newFilters.type) params.set('type', newFilters.type);
     if (newFilters.startDate) params.set('startDate', newFilters.startDate);
     if (newFilters.endDate) params.set('endDate', newFilters.endDate);
     params.set('page', '1');
@@ -130,10 +98,8 @@ const Logs = () => {
   const clearFilters = () => {
     setFilters({
       project_id: '',
-      service_id: '',
       startDate: '',
-      endDate: '',
-      type: ''
+      endDate: ''
     });
     setPagination(prev => ({ ...prev, page: 1 }));
     setSearchParams({ page: '1' });
@@ -146,7 +112,6 @@ const Logs = () => {
     setSearchParams(params);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
 
   if (loading && logs.length === 0) {
     return (
@@ -161,7 +126,10 @@ const Logs = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Logs</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Database className="w-8 h-8" />
+          Query Optimization Logs
+        </h1>
       </div>
 
       {/* Filters */}
@@ -173,7 +141,7 @@ const Logs = () => {
               variant="outline"
               size="sm"
               onClick={clearFilters}
-              disabled={!filters.project_id && !filters.service_id && !filters.startDate && !filters.endDate && !filters.type}
+              disabled={!filters.project_id && !filters.startDate && !filters.endDate}
             >
               <X className="w-4 h-4 mr-2" />
               Clear Filters
@@ -181,7 +149,7 @@ const Logs = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label htmlFor="filter-project" className="text-sm font-medium">
                 Project
@@ -198,42 +166,6 @@ const Logs = () => {
                     {project.name}
                   </option>
                 ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="filter-service" className="text-sm font-medium">
-                Service
-              </label>
-              <select
-                id="filter-service"
-                value={filters.service_id}
-                onChange={(e) => handleFilterChange('service_id', e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                disabled={!filters.project_id}
-              >
-                <option value="">All Services</option>
-                {services.map((service) => (
-                  <option key={service._id} value={service._id}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="filter-type" className="text-sm font-medium">
-                Type
-              </label>
-              <select
-                id="filter-type"
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">All Types</option>
-                <option value="service_check">Service Check</option>
-                <option value="error_log">Error Log</option>
               </select>
             </div>
 
@@ -268,12 +200,12 @@ const Logs = () => {
       {logs.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <AlertTriangle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Logs Found</h3>
+            <Database className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Query Optimization Logs Found</h3>
             <p className="text-muted-foreground">
-              {Object.values(filters).some(f => f)
-                ? 'Try adjusting your filters'
-                : 'No logs available yet'}
+              {Object.values(filters).some(f => f) 
+                ? 'Try adjusting your filters' 
+                : 'No query optimization logs available yet'}
             </p>
           </CardContent>
         </Card>
@@ -281,7 +213,7 @@ const Logs = () => {
         <>
           <div className="space-y-4 mb-6">
             {logs.map((log) => (
-              <LogCard key={log._id} log={log} />
+              <QueryOptimizeLogCard key={log._id} log={log} />
             ))}
           </div>
 
@@ -350,5 +282,5 @@ const Logs = () => {
   );
 };
 
-export default Logs;
+export default QueryOptimizeLogs;
 

@@ -101,7 +101,7 @@ router.get('/', authenticate, async (req, res) => {
     const userId = req.user._id;
     const limit = parseInt(req.query.limit) || 20;
     const page = parseInt(req.query.page) || 1;
-    const { project_id, service_id, startDate, endDate } = req.query;
+    const { project_id, service_id, startDate, endDate, type } = req.query;
     
     let query = {};
     
@@ -165,6 +165,17 @@ router.get('/', authenticate, async (req, res) => {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         query.createdAt.$lte = end;
+      }
+    }
+
+    // Add type filter if provided
+    if (type) {
+      if (type === 'service_check') {
+        // Service check: function_name is null
+        query.function_name = null;
+      } else if (type === 'error_log') {
+        // Error Log: function_name is not null
+        query.function_name = { $ne: null };
       }
     }
     
