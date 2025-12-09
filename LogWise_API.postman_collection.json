@@ -709,6 +709,32 @@
             },
             "description": "Non-blocking webhook endpoint for error logging. Accepts project_id, function_name (optional), and error_text. The API responds immediately with 'Log registered' (202 status) and processes the error asynchronously:\n- Analyzes error using Groq AI\n- Ranks severity (info/warning/critical)\n- Finds root cause\n- Proposes solution\n- Sends comprehensive notification to Telegram group\n\nNo authentication required. Perfect for external integrations."
           }
+        },
+        {
+          "name": "Analyze Error (Synchronous)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_id\": \"PROJECT_ID_HERE\",\n  \"function_name\": \"processPayment\",\n  \"error_text\": \"2024-01-15 10:30:45 ERROR [PaymentProcessor] Connection timeout after 30 seconds. Failed to connect to payment gateway at api.payment.com:443. Stack trace: at PaymentProcessor.connect (payment.js:45) at async processPayment (payment.js:123)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhook/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhook", "analyze"]
+            },
+            "description": "Synchronous error analysis endpoint for frontend UI. Accepts project_id, function_name (optional), and error_text. Returns analysis results immediately:\n- Analyzes error using Groq AI\n- Ranks severity (info/warning/critical)\n- Finds root cause\n- Proposes solution\n- Saves log to database\n- Does NOT send Telegram notification\n\nRequires authentication. Returns full analysis results for display in UI."
+          }
         }
       ]
     },

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import AnalyzeError from './pages/AnalyzeError';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -77,6 +78,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analyze"
+        element={
+          <ProtectedRoute>
+            <AnalyzeError />
           </ProtectedRoute>
         }
       />

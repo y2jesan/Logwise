@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  FileText,
   FolderOpen,
   LogOut,
   Menu,
@@ -127,7 +128,7 @@ const DashboardLayout = ({ children }) => {
             )}
           </Button>
 
-          <div className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
+          <div className={`flex-1 overflow-y-auto sidebar-scrollbar ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-2 justify-center mb-6' : 'justify-between mb-8'}`}>
               {!sidebarCollapsed ? (
                 <div className="flex items-center gap-2 flex-1">
@@ -208,6 +209,24 @@ const DashboardLayout = ({ children }) => {
                 <AlertTriangle className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
                 {!sidebarCollapsed && <span className="text-sm">Logs</span>}
                 {sidebarCollapsed && isActive('/logs') && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                )}
+              </Link>
+              <Link
+                to="/analyze"
+                className={`group relative flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} ${
+                  sidebarCollapsed ? 'px-2 py-3' : 'px-4 py-2'
+                } rounded-md transition-colors ${
+                  isActive('/analyze')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? 'Analyze Error' : ''}
+              >
+                <FileText className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
+                {!sidebarCollapsed && <span className="text-sm">Analyze Error</span>}
+                {sidebarCollapsed && isActive('/analyze') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                 )}
               </Link>

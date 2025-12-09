@@ -23,22 +23,22 @@ const LogCard = ({ log }) => {
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical':
-        return 'text-destructive bg-destructive/10';
+        return 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800';
       case 'warning':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-800';
       default:
-        return 'text-muted-foreground bg-muted';
+        return 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800';
     }
   };
 
   const getSeverityIcon = (severity) => {
     switch (severity) {
       case 'critical':
-        return <AlertTriangle className="w-4 h-4 text-destructive" />;
+        return <AlertTriangle className="w-4 h-4 text-red-700 dark:text-red-400" />;
       case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+        return <AlertTriangle className="w-4 h-4 text-yellow-700 dark:text-yellow-400" />;
       default:
-        return <Clock className="w-4 h-4 text-muted-foreground" />;
+        return <Clock className="w-4 h-4 text-blue-700 dark:text-blue-400" />;
     }
   };
 
@@ -46,12 +46,30 @@ const LogCard = ({ log }) => {
     // Extract status from log text or determine from severity
     const text = log.text?.toLowerCase() || '';
     if (text.includes('is up') || text.includes('operational')) {
-      return { status: 'up', icon: CheckCircle, color: 'text-green-600' };
+      return { 
+        status: 'up', 
+        icon: CheckCircle, 
+        color: 'text-green-700 dark:text-green-300',
+        bgColor: 'bg-green-100 dark:bg-green-900/40',
+        borderColor: 'border-green-200 dark:border-green-800'
+      };
     }
     if (text.includes('is down') || text.includes('unreachable') || log.severity === 'critical') {
-      return { status: 'down', icon: XCircle, color: 'text-destructive' };
+      return { 
+        status: 'down', 
+        icon: XCircle, 
+        color: 'text-red-700 dark:text-red-300',
+        bgColor: 'bg-red-100 dark:bg-red-900/40',
+        borderColor: 'border-red-200 dark:border-red-800'
+      };
     }
-    return { status: 'unknown', icon: Clock, color: 'text-muted-foreground' };
+    return { 
+      status: 'unknown', 
+      icon: Clock, 
+      color: 'text-gray-700 dark:text-gray-300',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
+      borderColor: 'border-gray-200 dark:border-gray-700'
+    };
   };
 
   const serviceStatus = getServiceStatus(log);
@@ -73,9 +91,9 @@ const LogCard = ({ log }) => {
                   {log.service_id?.name || 'Unknown Service'}
                 </h3>
                 {/* Service Status - More Visible */}
-                <div className="flex items-center gap-1 ml-2">
-                  <StatusIcon className={`w-5 h-5 ${serviceStatus.color}`} />
-                  <span className={`text-base font-semibold ${serviceStatus.color}`}>
+                <div className={`flex items-center gap-1.5 ml-2 px-3 py-1 rounded-full border ${serviceStatus.bgColor} ${serviceStatus.borderColor}`}>
+                  <StatusIcon className={`w-4 h-4 ${serviceStatus.color}`} />
+                  <span className={`text-sm font-bold ${serviceStatus.color}`}>
                     {serviceStatus.status.toUpperCase()}
                   </span>
                 </div>
