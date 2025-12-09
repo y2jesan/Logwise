@@ -10,6 +10,7 @@ import settingsRoutes from './routes/settings.js';
 import logsRoutes from './routes/logs.js';
 import servicesRoutes from './routes/services.js';
 import performanceRoutes from './routes/performance.js';
+import projectsRoutes from './routes/projects.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/logs', logsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/performance', performanceRoutes);
+app.use('/api/projects', projectsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

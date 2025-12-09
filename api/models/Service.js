@@ -17,6 +17,11 @@ const serviceSchema = new mongoose.Schema({
   lastChecked: {
     type: Date,
     default: Date.now
+  },
+  project_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project',
+    required: true
   }
 }, {
   timestamps: true

@@ -1,12 +1,15 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import useAuthStore from './store/authStore';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Logs from './pages/Logs';
+import Projects from './pages/Projects';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Services from './pages/Services';
 import Settings from './pages/Settings';
-import ProtectedRoute from './components/ProtectedRoute';
+import useAuthStore from './store/authStore';
 
 function App() {
   const { checkAuth, loading } = useAuthStore();
@@ -41,6 +44,30 @@ function App() {
         element={
           <ProtectedRoute requireAdmin>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Projects />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <ProtectedRoute>
+            <Services />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/logs"
+        element={
+          <ProtectedRoute>
+            <Logs />
           </ProtectedRoute>
         }
       />

@@ -25,6 +25,16 @@ const logSchema = new mongoose.Schema({
   aiRaw: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
+  },
+  project_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project',
+    required: true
+  },
+  service_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Service',
+    default: null
   }
 }, {
   timestamps: true
