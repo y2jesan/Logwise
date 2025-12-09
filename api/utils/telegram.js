@@ -55,6 +55,19 @@ export const formatTelegramMessage = (type, data) => {
     case 'test':
       return `🧪 <b>Test Notification</b>\n\n` + `Type: ${data.type}\n` + `Message: ${data.message}\n` + `Time: ${timestamp}`;
 
+    case 'webhook_error':
+      const severityEmoji = data.severity === 'critical' ? '🚨' : data.severity === 'warning' ? '⚠️' : 'ℹ️';
+      return `${severityEmoji} <b>Error Detected via Webhook</b>\n\n` +
+        `<b>Project:</b> ${data.project_name}\n` +
+        `<b>Function:</b> ${data.function_name}\n` +
+        `<b>Severity:</b> ${data.severity.toUpperCase()}\n\n` +
+        `<b>Summary:</b>\n${data.summary}\n\n` +
+        `<b>Root Cause:</b>\n${data.cause}\n\n` +
+        `<b>Proposed Solution:</b>\n${data.fix}\n\n` +
+        `<b>Error Text:</b>\n<code>${data.error_text}</code>\n\n` +
+        `<b>Log ID:</b> ${data.log_id}\n` +
+        `<b>Time:</b> ${timestamp}`;
+
     default:
       return `📢 <b>LogWise Alert</b>\n\n${JSON.stringify(data, null, 2)}\nTime: ${timestamp}`;
   }

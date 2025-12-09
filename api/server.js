@@ -11,6 +11,7 @@ import logsRoutes from './routes/logs.js';
 import servicesRoutes from './routes/services.js';
 import performanceRoutes from './routes/performance.js';
 import projectsRoutes from './routes/projects.js';
+import webhookRoutes from './routes/webhook.js';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/api/logs', logsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/performance', performanceRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

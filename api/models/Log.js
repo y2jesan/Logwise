@@ -35,6 +35,11 @@ const logSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',
     default: null
+  },
+  function_name: {
+    type: String,
+    trim: true,
+    default: null
   }
 }, {
   timestamps: true

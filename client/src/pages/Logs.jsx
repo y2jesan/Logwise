@@ -1,17 +1,8 @@
-import {
-  AlertTriangle,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  FolderOpen,
-  Server,
-  X,
-  XCircle
-} from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import LogCard from '../components/LogCard';
 import Button from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Input from '../components/ui/Input';
@@ -25,7 +16,6 @@ const Logs = () => {
   const [projects, setProjects] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [filters, setFilters] = useState({
     project_id: '',
     service_id: '',
@@ -126,51 +116,6 @@ const Logs = () => {
     setSearchParams({});
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-destructive bg-destructive/10';
-      case 'warning':
-        return 'text-yellow-600 bg-yellow-100';
-      default:
-        return 'text-muted-foreground bg-muted';
-    }
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'critical':
-        return <AlertTriangle className="w-4 h-4 text-destructive" />;
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-muted-foreground" />;
-    }
-  };
-
-  const toggleLog = (logId) => {
-    setExpandedLogs((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(logId)) {
-        newSet.delete(logId);
-      } else {
-        newSet.add(logId);
-      }
-      return newSet;
-    });
-  };
-
-  const getServiceStatus = (log) => {
-    // Extract status from log text or determine from severity
-    const text = log.text?.toLowerCase() || '';
-    if (text.includes('is up') || text.includes('operational')) {
-      return { status: 'up', icon: CheckCircle, color: 'text-green-600' };
-    }
-    if (text.includes('is down') || text.includes('unreachable') || log.severity === 'critical') {
-      return { status: 'down', icon: XCircle, color: 'text-destructive' };
-    }
-    return { status: 'unknown', icon: Clock, color: 'text-muted-foreground' };
-  };
 
   if (loading && logs.length === 0) {
     return (
@@ -290,115 +235,9 @@ const Logs = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {logs.map((log) => {
-            const isExpanded = expandedLogs.has(log._id);
-            const serviceStatus = getServiceStatus(log);
-            const StatusIcon = serviceStatus.icon;
-
-            return (
-              <Card key={log._id} className="hover:shadow-lg transition-shadow">
-                <CardHeader 
-                  className="cursor-pointer p-4"
-                  onClick={() => toggleLog(log._id)}
-                >
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      {/* Service Name - More Visible */}
-                      {log.service_id && (
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <Server className="w-5 h-5 text-primary" />
-                          <h3 className="text-xl font-bold text-foreground">
-                            {log.service_id?.name || 'Unknown Service'}
-                          </h3>
-                          {/* Service Status - More Visible */}
-                          <div className="flex items-center gap-1 ml-2">
-                            <StatusIcon className={`w-5 h-5 ${serviceStatus.color}`} />
-                            <span className={`text-base font-semibold ${serviceStatus.color}`}>
-                              {serviceStatus.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Summary */}
-                      <div className="flex items-center gap-2 mb-2">
-                        {getSeverityIcon(log.severity)}
-                        <CardTitle className="text-base">{log.summary || 'Log Entry'}</CardTitle>
-                      </div>
-                    </div>
-                    
-                    {/* Right Side: Project, Timestamp, Severity, Expand Button */}
-                    <div className="flex flex-col md:items-end gap-2 md:ml-4">
-                      <div className="flex items-center gap-4 flex-wrap md:justify-end">
-                        {log.project_id && (
-                          <div className="flex items-center gap-1">
-                            <FolderOpen className="w-4 h-4" />
-                            <span className="text-sm">{log.project_id?.name || 'Unknown Project'}</span>
-                          </div>
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {new Date(log.createdAt).toLocaleString()}
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(
-                            log.severity
-                          )}`}
-                        >
-                          {log.severity}
-                        </span>
-                      </div>
-                      
-                      {/* Expand/Collapse Button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="self-end md:self-auto"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLog(log._id);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="w-5 h-5" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                {/* Collapsible Content */}
-                {isExpanded && (
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm font-medium mb-1">Log Text:</p>
-                        <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
-                          {log.text}
-                        </p>
-                      </div>
-                      {log.cause && (
-                        <div>
-                          <p className="text-sm font-medium mb-1">Cause:</p>
-                          <p className="text-sm text-muted-foreground">{log.cause}</p>
-                        </div>
-                      )}
-                      {log.fix && (
-                        <div>
-                          <p className="text-sm font-medium mb-1">Fix:</p>
-                          <p className="text-sm text-muted-foreground bg-green-50 p-2 rounded">
-                            {log.fix}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
+          {logs.map((log) => (
+            <LogCard key={log._id} log={log} />
+          ))}
         </div>
       )}
     </DashboardLayout>

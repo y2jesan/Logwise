@@ -97,7 +97,7 @@ const DashboardLayout = ({ children }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-50 bg-card border border-r-0 rounded-r-md hover:bg-accent h-8 w-8"
+            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-50 bg-card border rounded-r-md hover:bg-accent h-8 w-8"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >

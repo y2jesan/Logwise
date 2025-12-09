@@ -8,7 +8,7 @@ const Card = ({ className, ...props }) => (
 );
 
 const CardHeader = ({ className, ...props }) => (
-  <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  <div className={cn('flex flex-col space-y-1.5 p-4', className)} {...props} />
 );
 
 const CardTitle = ({ className, ...props }) => (
@@ -20,12 +20,12 @@ const CardDescription = ({ className, ...props }) => (
 );
 
 const CardContent = ({ className, ...props }) => (
-  <div className={cn('p-6 pt-0', className)} {...props} />
+  <div className={cn('p-4 pt-0', className)} {...props} />
 );
 
 const CardFooter = ({ className, ...props }) => (
-  <div className={cn('flex items-center p-6 pt-0', className)} {...props} />
+  <div className={cn('flex items-center 4 pt-0', className)} {...props} />
 );
 
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
 
