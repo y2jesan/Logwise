@@ -109,7 +109,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Dashboard</h1>
             {projects.length > 0 ? (
               <select
@@ -134,7 +134,7 @@ const Dashboard = () => {
           </div>
 
           {projects.length === 0 && (
-            <Card className="mb-8">
+            <Card className="mb-6">
               <CardContent className="py-12 text-center">
                 <FolderOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Projects Yet</h3>
@@ -152,7 +152,7 @@ const Dashboard = () => {
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">System Uptime</CardTitle>
@@ -189,7 +189,7 @@ const Dashboard = () => {
           </div>
 
           {/* Services Status */}
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Services Status</CardTitle>
               <CardDescription>Current status of monitored services</CardDescription>
@@ -227,7 +227,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Recent Logs */}
-          <Card className="mb-8">
+          <Card>
             <CardHeader>
               <CardTitle>Recent Logs</CardTitle>
               <CardDescription>Latest log entries analyzed by AI</CardDescription>

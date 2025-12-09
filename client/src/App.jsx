@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Logs from './pages/Logs';
+import Profile from './pages/Profile';
 import Projects from './pages/Projects';
 import Register from './pages/Register';
 import Services from './pages/Services';
@@ -68,6 +69,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Logs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

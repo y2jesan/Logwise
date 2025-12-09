@@ -38,7 +38,10 @@ router.post('/register', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        name: user.name,
+        organization: user.organization,
+        designation: user.designation
       },
       token
     });
@@ -84,7 +87,10 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        name: user.name,
+        organization: user.organization,
+        designation: user.designation
       },
       token
     });
@@ -100,9 +106,72 @@ router.get('/me', authenticate, async (req, res) => {
     user: {
       id: req.user._id,
       email: req.user.email,
-      role: req.user.role
+      role: req.user.role,
+      name: req.user.name,
+      organization: req.user.organization,
+      designation: req.user.designation
     }
   });
+});
+
+// Update profile
+router.put('/profile', authenticate, async (req, res) => {
+  try {
+    const { name, organization, designation } = req.body;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { name, organization, designation },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        organization: user.organization,
+        designation: user.designation
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Change password
+router.put('/password', authenticate, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
 });
 
 // Logout
