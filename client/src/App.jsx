@@ -11,6 +11,7 @@ import Projects from './pages/Projects';
 import Register from './pages/Register';
 import Services from './pages/Services';
 import Settings from './pages/Settings';
+import WebhookDocs from './pages/WebhookDocs';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -86,6 +87,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AnalyzeError />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/webhook-docs"
+        element={
+          <ProtectedRoute>
+            <WebhookDocs />
           </ProtectedRoute>
         }
       />

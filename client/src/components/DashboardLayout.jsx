@@ -1,6 +1,7 @@
 import {
   Activity,
   AlertTriangle,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -263,6 +264,24 @@ const DashboardLayout = ({ children }) => {
                 <TrendingUp className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
                 {!sidebarCollapsed && <span className="text-sm">Services</span>}
                 {sidebarCollapsed && isActive('/services') && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                )}
+              </Link>
+              <Link
+                to="/webhook-docs"
+                className={`group relative flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} ${
+                  sidebarCollapsed ? 'px-2 py-3' : 'px-4 py-2'
+                } rounded-md transition-colors ${
+                  isActive('/webhook-docs')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? 'Webhook API Docs' : ''}
+              >
+                <BookOpen className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} flex-shrink-0`} />
+                {!sidebarCollapsed && <span className="text-sm">Webhook API Docs</span>}
+                {sidebarCollapsed && isActive('/webhook-docs') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
                 )}
               </Link>
