@@ -240,9 +240,14 @@ const Projects = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Projects</h1>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Project
+          <Button 
+            onClick={() => setShowCreateModal(true)}
+            size="icon"
+            className="md:w-auto md:h-auto md:px-4 md:py-2"
+            title="Create Project"
+          >
+            <Plus className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Create Project</span>
           </Button>
         </div>
 

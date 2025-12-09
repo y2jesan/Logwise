@@ -242,16 +242,29 @@ const Services = () => {
         <h1 className="text-3xl font-bold">Services</h1>
           <div className="flex gap-2">
             {services.length > 0 && (
-              <Button variant="outline" onClick={handleCheckStatus} disabled={loading}>
-                Check Status
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleCheckStatus} 
+                disabled={loading}
+                className="md:w-auto md:h-auto md:px-4 md:py-2"
+                title="Check Status"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''} md:mr-2`} />
+                <span className="hidden md:inline">Check Status</span>
               </Button>
             )}
-            <Button onClick={() => {
-              setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
-              setShowCreateModal(true);
-            }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Service
+            <Button 
+              onClick={() => {
+                setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+                setShowCreateModal(true);
+              }}
+              size="icon"
+              className="md:w-auto md:h-auto md:px-4 md:py-2"
+              title="Create Service"
+            >
+              <Plus className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Create Service</span>
             </Button>
           </div>
         </div>

@@ -115,9 +115,13 @@ const Dashboard = () => {
               </select>
             ) : (
               <Link to="/projects">
-                <Button>
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  Create Your First Project
+                <Button
+                  size="icon"
+                  className="md:w-auto md:h-auto md:px-4 md:py-2"
+                  title="Create Your First Project"
+                >
+                  <Plus className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Create Your First Project</span>
                 </Button>
               </Link>
             )}
