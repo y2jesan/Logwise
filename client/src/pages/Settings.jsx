@@ -171,8 +171,8 @@ const Settings = () => {
               {/* Test Notification */}
               <div className="mt-8 pt-8 border-t">
                 <h3 className="text-lg font-semibold mb-4">Test Notification</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                  <div className="flex-1 space-y-2 w-full sm:w-auto">
                     <label htmlFor="testType" className="text-sm font-medium">
                       Notification Type
                     </label>
@@ -193,6 +193,7 @@ const Settings = () => {
                     variant="outline"
                     onClick={handleTestNotification}
                     disabled={loading}
+                    className="w-full sm:w-auto"
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Send Test Notification

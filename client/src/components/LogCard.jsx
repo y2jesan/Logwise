@@ -156,7 +156,7 @@ const LogCard = ({ log }) => {
             {log.fix && (
               <div>
                 <p className="text-sm font-medium mb-1">Fix:</p>
-                <p className="text-sm text-muted-foreground bg-green-50 p-2 rounded">
+                <p className="text-sm text-green-900 dark:text-green-100 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-3 rounded-md">
                   {log.fix}
                 </p>
               </div>

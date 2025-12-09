@@ -6,18 +6,22 @@ import {
   FolderOpen,
   LogOut,
   Menu,
+  Moon,
   Settings,
+  Sun,
   TrendingUp,
   X
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from '../hooks/useTheme';
 import useAuthStore from '../store/authStore';
 import Button from './ui/Button';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuthStore();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Load from localStorage, default to false (expanded) for desktop
@@ -65,7 +69,22 @@ const DashboardLayout = ({ children }) => {
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-card border-b flex items-center justify-between p-4">
-        <h2 className="text-xl font-bold text-primary">LogWise AI</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-primary">LogWise AI</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            className="h-8 w-8"
+          >
+            {theme === 'light' ? (
+              <Moon className="w-4 h-4" />
+            ) : (
+              <Sun className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -109,9 +128,42 @@ const DashboardLayout = ({ children }) => {
           </Button>
 
           <div className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
-            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center mb-6' : 'justify-between mb-8'}`}>
-              {!sidebarCollapsed && <h2 className="text-2xl font-bold text-primary">LogWise AI</h2>}
-              {sidebarCollapsed && <h2 className="text-lg font-bold text-primary">LW</h2>}
+            <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-2 justify-center mb-6' : 'justify-between mb-8'}`}>
+              {!sidebarCollapsed ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <h2 className="text-2xl font-bold text-primary">LogWise AI</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                    className="h-8 w-8"
+                  >
+                    {theme === 'light' ? (
+                      <Moon className="w-4 h-4" />
+                    ) : (
+                      <Sun className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-lg font-bold text-primary">LW</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                    className="h-8 w-8"
+                  >
+                    {theme === 'light' ? (
+                      <Moon className="w-4 h-4" />
+                    ) : (
+                      <Sun className="w-4 h-4" />
+                    )}
+                  </Button>
+                </>
+              )}
               <Button
                 variant="ghost"
                 size="icon"

@@ -347,34 +347,35 @@ const Services = () => {
                         </span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Status:</span>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(service.status)}
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            service.status
-                          )}`}
-                        >
-                          {service.status || 'unknown'}
-                        </span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground">Status:</span>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(service.status)}
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              service.status
+                            )}`}
+                          >
+                            {service.status || 'unknown'}
+                          </span>
+                        </div>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleCheckSingleServiceStatus(service._id)}
+                        disabled={checkingServiceId === service._id}
+                        title="Check Status"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${checkingServiceId === service._id ? 'animate-spin' : ''}`} />
+                      </Button>
                     </div>
                     {service.lastChecked && (
                       <p className="text-xs text-muted-foreground">
                         Last checked: {new Date(service.lastChecked).toLocaleString()}
                       </p>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => handleCheckSingleServiceStatus(service._id)}
-                      disabled={checkingServiceId === service._id}
-                      title="Check Status"
-                    >
-                      <RefreshCw className={`w-4 h-4 ${checkingServiceId === service._id ? 'animate-spin' : ''}`} />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
