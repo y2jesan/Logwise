@@ -1,6 +1,7 @@
 import {
   FolderOpen,
-  Plus
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const [uptime, setUptime] = useState(99.9);
   const [loading, setLoading] = useState(false);
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [checkingServiceId, setCheckingServiceId] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -82,6 +84,20 @@ const Dashboard = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckSingleServiceStatus = async (serviceId) => {
+    setCheckingServiceId(serviceId);
+
+    try {
+      await api.get(`/services/${serviceId}/status`);
+      // Refresh services data after checking
+      fetchData();
+    } catch (error) {
+      console.error('Error checking service status:', error);
+    } finally {
+      setCheckingServiceId(null);
     }
   };
 
@@ -198,21 +214,33 @@ const Dashboard = () => {
                       key={service._id}
                       className="flex items-center justify-between p-3 border rounded-lg"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">{service.name}</p>
                         <p className="text-sm text-muted-foreground">{service.url}</p>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          service.status === 'up'
-                            ? 'bg-green-100 text-green-800'
-                            : service.status === 'down'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {service.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            service.status === 'up'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                              : service.status === 'down'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                          }`}
+                        >
+                          {service.status}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleCheckSingleServiceStatus(service._id)}
+                          disabled={checkingServiceId === service._id}
+                          title="Check Status"
+                          className="h-8 w-8"
+                        >
+                          <RefreshCw className={`w-4 h-4 ${checkingServiceId === service._id ? 'animate-spin' : ''}`} />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
