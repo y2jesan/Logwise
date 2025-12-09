@@ -73,7 +73,7 @@ const Dashboard = () => {
         api.get(`/services?project_id=${selectedProjectId}`)
       ]);
       
-      setLogs(logsRes.data);
+      setLogs(logsRes.data.logs || logsRes.data);
       setServices(servicesRes.data);
       
       // Calculate uptime (dummy for MVP)

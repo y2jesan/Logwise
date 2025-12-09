@@ -223,14 +223,19 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/logs?limit=50&project_id=PROJECT_ID_HERE&service_id=SERVICE_ID_HERE&startDate=2024-01-01&endDate=2024-01-31",
+              "raw": "{{base_url}}/api/logs?limit=20&page=1&project_id=PROJECT_ID_HERE&service_id=SERVICE_ID_HERE&startDate=2024-01-01&endDate=2024-01-31",
               "host": ["{{base_url}}"],
               "path": ["api", "logs"],
               "query": [
                 {
                   "key": "limit",
-                  "value": "50",
-                  "description": "Number of logs to retrieve"
+                  "value": "20",
+                  "description": "Number of logs per page (default: 20, max: 20 for Logs page)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
                 },
                 {
                   "key": "project_id",
@@ -254,7 +259,7 @@
                 }
               ]
             },
-            "description": "Get recent logs with AI analysis. Optional filters: project_id, service_id, startDate, endDate."
+            "description": "Get logs with pagination and AI analysis. Returns logs array and pagination metadata (page, limit, total, totalPages). Optional filters: project_id, service_id, startDate, endDate. Use limit=10 for dashboard, limit=20 for logs page."
           }
         },
         {

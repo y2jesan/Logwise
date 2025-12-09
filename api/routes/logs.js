@@ -99,7 +99,8 @@ router.post('/push', async (req, res) => {
 router.get('/', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page) || 1;
     const { project_id, service_id, startDate, endDate } = req.query;
     
     let query = {};
@@ -122,7 +123,15 @@ router.get('/', authenticate, async (req, res) => {
       ];
       
       if (accessibleProjectIds.length === 0) {
-        return res.json([]);
+        return res.json({
+          logs: [],
+          pagination: {
+            page: 1,
+            limit,
+            total: 0,
+            totalPages: 0
+          }
+        });
       }
       
       query.project_id = { $in: accessibleProjectIds };
@@ -159,14 +168,28 @@ router.get('/', authenticate, async (req, res) => {
       }
     }
     
+    // Get total count for pagination
+    const total = await Log.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+    const skip = (page - 1) * limit;
+    
     const logs = await Log.find(query)
       .populate('project_id', 'name')
       .populate('service_id', 'name url')
       .sort({ createdAt: -1 })
+      .skip(skip)
       .limit(limit)
       .select('-aiRaw');
     
-    res.json(logs);
+    res.json({
+      logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error('Get logs error:', error);
     res.status(500).json({ error: 'Failed to fetch logs' });
