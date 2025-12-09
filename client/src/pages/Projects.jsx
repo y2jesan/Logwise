@@ -35,7 +35,10 @@ const Projects = () => {
   });
   const [serviceFormData, setServiceFormData] = useState({
     name: '',
-    url: ''
+    url: '',
+    auto_check: false,
+    minute_interval: '',
+    report_success: false
   });
 
   useEffect(() => {
@@ -206,13 +209,16 @@ const Projects = () => {
     setMessage('');
 
     try {
-      await api.post('/services', {
+      // Prepare data for API - only include minute_interval if auto_check is true
+      const serviceData = {
         ...serviceFormData,
-        project_id: selectedProject._id
-      });
+        project_id: selectedProject._id,
+        minute_interval: serviceFormData.auto_check && serviceFormData.minute_interval ? Number(serviceFormData.minute_interval) : undefined
+      };
+      await api.post('/services', serviceData);
       setMessage('Service created successfully!');
       setShowServiceModal(false);
-      setServiceFormData({ name: '', url: '' });
+      setServiceFormData({ name: '', url: '', auto_check: false, minute_interval: '', report_success: false });
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to create service');
     } finally {
@@ -222,7 +228,7 @@ const Projects = () => {
 
   const openServiceModal = (project) => {
     setSelectedProject(project);
-    setServiceFormData({ name: '', url: '' });
+    setServiceFormData({ name: '', url: '', auto_check: false, minute_interval: '', report_success: false });
     setShowServiceModal(true);
   };
 
@@ -595,7 +601,7 @@ const Projects = () => {
                     onClick={() => {
                       setShowServiceModal(false);
                       setSelectedProject(null);
-                      setServiceFormData({ name: '', url: '' });
+                      setServiceFormData({ name: '', url: '', auto_check: false, minute_interval: '', report_success: false });
                       setMessage('');
                     }}
                     className="text-muted-foreground hover:text-foreground"
@@ -631,6 +637,42 @@ const Projects = () => {
                       placeholder="https://example.com/health"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={serviceFormData.auto_check}
+                        onChange={(e) => setServiceFormData({ ...serviceFormData, auto_check: e.target.checked, minute_interval: e.target.checked ? serviceFormData.minute_interval : '' })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Enable Auto-Check</span>
+                    </label>
+                    {serviceFormData.auto_check && (
+                      <div className="ml-6 space-y-2">
+                        <label htmlFor="service-minute-interval" className="text-sm font-medium">
+                          Check Interval (minutes) *
+                        </label>
+                        <Input
+                          id="service-minute-interval"
+                          type="number"
+                          required={serviceFormData.auto_check}
+                          min="1"
+                          value={serviceFormData.minute_interval}
+                          onChange={(e) => setServiceFormData({ ...serviceFormData, minute_interval: e.target.value })}
+                          placeholder="e.g., 5"
+                        />
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={serviceFormData.report_success}
+                        onChange={(e) => setServiceFormData({ ...serviceFormData, report_success: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Report Success (log and notify on successful checks)</span>
+                    </label>
+                  </div>
                   <div className="flex gap-2">
                     <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? 'Creating...' : 'Create Service'}
@@ -641,7 +683,7 @@ const Projects = () => {
                       onClick={() => {
                         setShowServiceModal(false);
                         setSelectedProject(null);
-                        setServiceFormData({ name: '', url: '' });
+                        setServiceFormData({ name: '', url: '', auto_check: false, minute_interval: '', report_success: false });
                         setMessage('');
                       }}
                     >

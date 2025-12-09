@@ -1,12 +1,12 @@
 import express from 'express';
-import Service from '../models/Service.js';
-import Project from '../models/Project.js';
-import UserProject from '../models/UserProject.js';
-import Log from '../models/Log.js';
-import { authenticate } from '../middleware/auth.js';
-import { sendTelegramNotification, formatTelegramMessage } from '../utils/telegram.js';
-import { analyzeLog } from '../utils/groq.js';
 import fetch from 'node-fetch';
+import { authenticate } from '../middleware/auth.js';
+import Log from '../models/Log.js';
+import Project from '../models/Project.js';
+import Service from '../models/Service.js';
+import UserProject from '../models/UserProject.js';
+import { analyzeLog } from '../utils/groq.js';
+import { formatTelegramMessage, sendTelegramNotification } from '../utils/telegram.js';
 
 const router = express.Router();
 
@@ -14,25 +14,30 @@ const router = express.Router();
 const hasProjectAccess = async (userId, projectId) => {
   const project = await Project.findById(projectId);
   if (!project) return false;
-  
+
   // Check if user is owner
   if (project.owner.toString() === userId.toString()) return true;
-  
+
   // Check if user is assigned
   const userProject = await UserProject.findOne({ user: userId, project: projectId });
   return !!userProject;
 };
 
 // Helper function to create log for service check
-const createServiceCheckLog = async (service, status, responseTime, error = null) => {
+const createServiceCheckLog = async (service, status, responseTime, error = null, reportSuccess = false) => {
   try {
+    // Only log success if report_success is true
+    if (status === 'up' && !reportSuccess) {
+      return;
+    }
+
     const project = await Project.findById(service.project_id);
-    const logText = error 
+    const logText = error
       ? `Service check: ${service.name} (${service.url}) is ${status}. Error: ${error}. Response time: ${responseTime ? responseTime + 'ms' : 'N/A'}. Project: ${project?.name || 'Unknown'}`
       : `Service check: ${service.name} (${service.url}) is ${status}. Response time: ${responseTime ? responseTime + 'ms' : 'N/A'}. Project: ${project?.name || 'Unknown'}`;
-    
+
     const analysis = await analyzeLog(logText);
-    
+
     await Log.create({
       text: logText,
       project_id: service.project_id,
@@ -47,14 +52,46 @@ const createServiceCheckLog = async (service, status, responseTime, error = null
   }
 };
 
+// Helper function to send Telegram notification (respects report_success)
+const sendServiceNotification = async (service, status, analysis, response = null, error = null) => {
+  try {
+    // Only notify on failure, or on success if report_success is true
+    if (status === 'up' && !service.report_success) {
+      return;
+    }
+
+    if (status === 'down') {
+      const logText = error
+        ? `Service ${service.name} (${service.url}) is unreachable. Error: ${error.message || error}`
+        : `Service ${service.name} (${service.url}) is down. Status code: ${response?.status}`;
+
+      const serviceAnalysis = analysis || await analyzeLog(logText);
+
+      const message = formatTelegramMessage('service_down', {
+        name: service.name,
+        url: service.url,
+        status: 'down',
+        cause: serviceAnalysis.cause,
+        fix: serviceAnalysis.fix
+      });
+      await sendTelegramNotification(message);
+    } else if (status === 'up' && service.report_success) {
+      // Optional: send success notification if report_success is true
+      // For now, we'll just log it, but you can add a success notification format if needed
+    }
+  } catch (error) {
+    console.error('Error sending service notification:', error);
+  }
+};
+
 // Get all services (filtered by project_id if provided)
 router.get('/', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
     const { project_id } = req.query;
-    
+
     let query = {};
-    
+
     if (project_id) {
       // Verify user has access to this project
       const hasAccess = await hasProjectAccess(userId, project_id);
@@ -70,14 +107,14 @@ router.get('/', authenticate, async (req, res) => {
         ...ownedProjects.map(p => p._id),
         ...userProjects.map(up => up.project)
       ];
-      
+
       if (accessibleProjectIds.length === 0) {
         return res.json([]);
       }
-      
+
       query.project_id = { $in: accessibleProjectIds };
     }
-    
+
     const services = await Service.find(query).sort({ createdAt: -1 });
     res.json(services);
   } catch (error) {
@@ -89,10 +126,15 @@ router.get('/', authenticate, async (req, res) => {
 // Create service
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { name, url, project_id } = req.body;
+    const { name, url, project_id, auto_check, minute_interval, report_success } = req.body;
 
     if (!name || !url || !project_id) {
       return res.status(400).json({ error: 'Name, URL, and project_id are required' });
+    }
+
+    // Validate minute_interval if auto_check is true
+    if (auto_check && (!minute_interval || minute_interval < 1)) {
+      return res.status(400).json({ error: 'minute_interval is required and must be at least 1 when auto_check is true' });
     }
 
     // Verify user has access to this project
@@ -101,7 +143,16 @@ router.post('/', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Access denied to this project' });
     }
 
-    const service = await Service.create({ name, url, project_id });
+    const serviceData = {
+      name,
+      url,
+      project_id,
+      auto_check: auto_check || false,
+      minute_interval: auto_check ? minute_interval : null,
+      report_success: report_success || false
+    };
+
+    const service = await Service.create(serviceData);
     res.json(service);
   } catch (error) {
     console.error('Create service error:', error);
@@ -114,9 +165,9 @@ router.get('/status', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
     const { project_id } = req.query;
-    
+
     let query = {};
-    
+
     if (project_id) {
       // Verify user has access to this project
       const hasAccess = await hasProjectAccess(userId, project_id);
@@ -132,14 +183,14 @@ router.get('/status', authenticate, async (req, res) => {
         ...ownedProjects.map(p => p._id),
         ...userProjects.map(up => up.project)
       ];
-      
+
       if (accessibleProjectIds.length === 0) {
         return res.json([]);
       }
-      
+
       query.project_id = { $in: accessibleProjectIds };
     }
-    
+
     const services = await Service.find(query);
     const results = [];
 
@@ -148,12 +199,12 @@ router.get('/status', authenticate, async (req, res) => {
         const startTime = Date.now();
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         const response = await fetch(service.url, {
           method: 'GET',
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
 
@@ -162,8 +213,8 @@ router.get('/status', authenticate, async (req, res) => {
         service.lastChecked = new Date();
         await service.save();
 
-        // Create log for service check
-        await createServiceCheckLog(service, status, responseTime);
+        // Create log for service check (respects report_success)
+        await createServiceCheckLog(service, status, responseTime, null, service.report_success);
 
         results.push({
           id: service._id,
@@ -174,19 +225,11 @@ router.get('/status', authenticate, async (req, res) => {
           lastChecked: service.lastChecked
         });
 
-        // If service is down, send Telegram alert
+        // Send notification (respects report_success)
         if (status === 'down') {
           const logText = `Service ${service.name} (${service.url}) is down. Status code: ${response.status}`;
           const analysis = await analyzeLog(logText);
-          
-          const message = formatTelegramMessage('service_down', {
-            name: service.name,
-            url: service.url,
-            status: 'down',
-            cause: analysis.cause,
-            fix: analysis.fix
-          });
-          await sendTelegramNotification(message);
+          await sendServiceNotification(service, status, analysis, response);
         }
       } catch (error) {
         // Service is down or unreachable
@@ -194,8 +237,8 @@ router.get('/status', authenticate, async (req, res) => {
         service.lastChecked = new Date();
         await service.save();
 
-        // Create log for service check
-        await createServiceCheckLog(service, 'down', null, error.message);
+        // Create log for service check (respects report_success)
+        await createServiceCheckLog(service, 'down', null, error.message, service.report_success);
 
         results.push({
           id: service._id,
@@ -207,18 +250,10 @@ router.get('/status', authenticate, async (req, res) => {
           error: error.message
         });
 
-        // Send Telegram alert
+        // Send notification (respects report_success)
         const logText = `Service ${service.name} (${service.url}) is unreachable. Error: ${error.message}`;
         const analysis = await analyzeLog(logText);
-        
-        const message = formatTelegramMessage('service_down', {
-          name: service.name,
-          url: service.url,
-          status: 'down',
-          cause: analysis.cause,
-          fix: analysis.fix
-        });
-        await sendTelegramNotification(message);
+        await sendServiceNotification(service, 'down', analysis, null, error);
       }
     }
 
@@ -234,7 +269,7 @@ router.get('/:id/status', authenticate, async (req, res) => {
   try {
     const serviceId = req.params.id;
     const service = await Service.findById(serviceId);
-    
+
     if (!service) {
       return res.status(404).json({ error: 'Service not found' });
     }
@@ -249,12 +284,12 @@ router.get('/:id/status', authenticate, async (req, res) => {
       const startTime = Date.now();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
+
       const response = await fetch(service.url, {
         method: 'GET',
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
 
@@ -263,8 +298,8 @@ router.get('/:id/status', authenticate, async (req, res) => {
       service.lastChecked = new Date();
       await service.save();
 
-      // Create log for service check
-      await createServiceCheckLog(service, status, responseTime);
+      // Create log for service check (respects report_success)
+      await createServiceCheckLog(service, status, responseTime, null, service.report_success);
 
       const result = {
         id: service._id,
@@ -275,19 +310,11 @@ router.get('/:id/status', authenticate, async (req, res) => {
         lastChecked: service.lastChecked
       };
 
-      // If service is down, send Telegram alert
+      // Send notification (respects report_success)
       if (status === 'down') {
         const logText = `Service ${service.name} (${service.url}) is down. Status code: ${response.status}`;
         const analysis = await analyzeLog(logText);
-        
-        const message = formatTelegramMessage('service_down', {
-          name: service.name,
-          url: service.url,
-          status: 'down',
-          cause: analysis.cause,
-          fix: analysis.fix
-        });
-        await sendTelegramNotification(message);
+        await sendServiceNotification(service, status, analysis, response);
       }
 
       res.json(result);
@@ -297,8 +324,8 @@ router.get('/:id/status', authenticate, async (req, res) => {
       service.lastChecked = new Date();
       await service.save();
 
-      // Create log for service check
-      await createServiceCheckLog(service, 'down', null, error.message);
+      // Create log for service check (respects report_success)
+      await createServiceCheckLog(service, 'down', null, error.message, service.report_success);
 
       const result = {
         id: service._id,
@@ -310,18 +337,10 @@ router.get('/:id/status', authenticate, async (req, res) => {
         error: error.message
       };
 
-      // Send Telegram alert
+      // Send notification (respects report_success)
       const logText = `Service ${service.name} (${service.url}) is unreachable. Error: ${error.message}`;
       const analysis = await analyzeLog(logText);
-      
-      const message = formatTelegramMessage('service_down', {
-        name: service.name,
-        url: service.url,
-        status: 'down',
-        cause: analysis.cause,
-        fix: analysis.fix
-      });
-      await sendTelegramNotification(message);
+      await sendServiceNotification(service, 'down', analysis, null, error);
 
       res.json(result);
     }
@@ -334,7 +353,7 @@ router.get('/:id/status', authenticate, async (req, res) => {
 // Update service
 router.put('/:id', authenticate, async (req, res) => {
   try {
-    const { name, url, project_id } = req.body;
+    const { name, url, project_id, auto_check, minute_interval, report_success } = req.body;
     const service = await Service.findById(req.params.id);
 
     if (!service) {
@@ -355,10 +374,30 @@ router.put('/:id', authenticate, async (req, res) => {
       }
     }
 
-    const updateData = { name, url };
-    if (project_id) {
-      updateData.project_id = project_id;
+    // Validate minute_interval if auto_check is true
+    if (auto_check === true && (!minute_interval || minute_interval < 1)) {
+      return res.status(400).json({ error: 'minute_interval is required and must be at least 1 when auto_check is true' });
     }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (url !== undefined) updateData.url = url;
+    if (project_id !== undefined) updateData.project_id = project_id;
+    if (auto_check !== undefined) {
+      updateData.auto_check = auto_check;
+      // If auto_check is false, clear minute_interval
+      if (!auto_check) {
+        updateData.minute_interval = null;
+      } else if (minute_interval !== undefined) {
+        updateData.minute_interval = minute_interval;
+      }
+    } else if (minute_interval !== undefined) {
+      // Only update minute_interval if auto_check is already true
+      if (service.auto_check) {
+        updateData.minute_interval = minute_interval;
+      }
+    }
+    if (report_success !== undefined) updateData.report_success = report_success;
 
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,

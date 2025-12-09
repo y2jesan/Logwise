@@ -1,6 +1,7 @@
 import {
   AlertCircle,
   CheckCircle,
+  Clock,
   Edit,
   FolderOpen,
   Plus,
@@ -35,7 +36,10 @@ const Services = () => {
   const [formData, setFormData] = useState({
     name: '',
     url: '',
-    project_id: ''
+    project_id: '',
+    auto_check: false,
+    minute_interval: '',
+    report_success: false
   });
 
   useEffect(() => {
@@ -113,10 +117,15 @@ const Services = () => {
     setMessage('');
 
     try {
-      await api.post('/services', formData);
+      // Prepare data for API - only include minute_interval if auto_check is true
+      const serviceData = {
+        ...formData,
+        minute_interval: formData.auto_check && formData.minute_interval ? Number(formData.minute_interval) : undefined
+      };
+      await api.post('/services', serviceData);
       setMessage('Service created successfully!');
       setShowCreateModal(false);
-      setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+      setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '', auto_check: false, minute_interval: '', report_success: false });
       fetchServices();
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to create service');
@@ -131,11 +140,16 @@ const Services = () => {
     setMessage('');
 
     try {
-      await api.put(`/services/${selectedService._id}`, formData);
+      // Prepare data for API - only include minute_interval if auto_check is true
+      const serviceData = {
+        ...formData,
+        minute_interval: formData.auto_check && formData.minute_interval ? Number(formData.minute_interval) : undefined
+      };
+      await api.put(`/services/${selectedService._id}`, serviceData);
       setMessage('Service updated successfully!');
       setShowEditModal(false);
       setSelectedService(null);
-      setFormData({ name: '', url: '', project_id: '' });
+      setFormData({ name: '', url: '', project_id: '', auto_check: false, minute_interval: '', report_success: false });
       fetchServices();
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to update service');
@@ -199,7 +213,10 @@ const Services = () => {
     setFormData({
       name: service.name,
       url: service.url,
-      project_id: service.project_id
+      project_id: service.project_id,
+      auto_check: service.auto_check || false,
+      minute_interval: service.minute_interval || '',
+      report_success: service.report_success || false
     });
     setShowEditModal(true);
   };
@@ -256,7 +273,7 @@ const Services = () => {
             )}
             <Button 
               onClick={() => {
-                setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+                setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '', auto_check: false, minute_interval: '', report_success: false });
                 setShowCreateModal(true);
               }}
               size="icon"
@@ -311,7 +328,7 @@ const Services = () => {
                 Create your first service to start monitoring
               </p>
               <Button onClick={() => {
-                setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+                setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '', auto_check: false, minute_interval: '', report_success: false });
                 setShowCreateModal(true);
               }}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -360,6 +377,7 @@ const Services = () => {
                         </span>
                       </div>
                     )}
+                    
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-muted-foreground">Status:</span>
@@ -389,6 +407,19 @@ const Services = () => {
                         Last checked: {new Date(service.lastChecked).toLocaleString()}
                       </p>
                     )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className={`w-4 h-4 ${service.auto_check ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm ${service.auto_check ? 'text-green-700 dark:text-green-300 font-medium' : 'text-muted-foreground'}`}>
+                        Auto-Check: {service.auto_check ? `Enabled (every ${service.minute_interval} min)` : 'Disabled'}
+                      </span>
+                    </div>
+                    {service.auto_check && service.report_success && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-muted-foreground italic">
+                          ✓ Reports success
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -406,7 +437,7 @@ const Services = () => {
                   <button
                     onClick={() => {
                       setShowCreateModal(false);
-                      setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+                      setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '', auto_check: false, minute_interval: '', report_success: false });
                       setMessage('');
                     }}
                     className="text-muted-foreground hover:text-foreground"
@@ -463,6 +494,42 @@ const Services = () => {
                       placeholder="https://example.com/health"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.auto_check}
+                        onChange={(e) => setFormData({ ...formData, auto_check: e.target.checked, minute_interval: e.target.checked ? formData.minute_interval : '' })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Enable Auto-Check</span>
+                    </label>
+                    {formData.auto_check && (
+                      <div className="ml-6 space-y-2">
+                        <label htmlFor="create-minute-interval" className="text-sm font-medium">
+                          Check Interval (minutes) *
+                        </label>
+                        <Input
+                          id="create-minute-interval"
+                          type="number"
+                          required={formData.auto_check}
+                          min="1"
+                          value={formData.minute_interval}
+                          onChange={(e) => setFormData({ ...formData, minute_interval: e.target.value })}
+                          placeholder="e.g., 5"
+                        />
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.report_success}
+                        onChange={(e) => setFormData({ ...formData, report_success: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Log Success (log on successful checks)</span>
+                    </label>
+                  </div>
                   <div className="flex gap-2">
                     <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? 'Creating...' : 'Create'}
@@ -472,7 +539,7 @@ const Services = () => {
                       variant="outline"
                       onClick={() => {
                         setShowCreateModal(false);
-                        setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '' });
+                        setFormData({ name: '', url: '', project_id: selectedProjectId || projects[0]?._id || '', auto_check: false, minute_interval: '', report_success: false });
                         setMessage('');
                       }}
                     >
@@ -496,7 +563,7 @@ const Services = () => {
                     onClick={() => {
                       setShowEditModal(false);
                       setSelectedService(null);
-                      setFormData({ name: '', url: '', project_id: '' });
+                      setFormData({ name: '', url: '', project_id: '', auto_check: false, minute_interval: '', report_success: false });
                       setMessage('');
                     }}
                     className="text-muted-foreground hover:text-foreground"
@@ -552,6 +619,42 @@ const Services = () => {
                       placeholder="https://example.com/health"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.auto_check}
+                        onChange={(e) => setFormData({ ...formData, auto_check: e.target.checked, minute_interval: e.target.checked ? formData.minute_interval : '' })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Enable Auto-Check</span>
+                    </label>
+                    {formData.auto_check && (
+                      <div className="ml-6 space-y-2">
+                        <label htmlFor="edit-minute-interval" className="text-sm font-medium">
+                          Check Interval (minutes) *
+                        </label>
+                        <Input
+                          id="edit-minute-interval"
+                          type="number"
+                          required={formData.auto_check}
+                          min="1"
+                          value={formData.minute_interval}
+                          onChange={(e) => setFormData({ ...formData, minute_interval: e.target.value })}
+                          placeholder="e.g., 5"
+                        />
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.report_success}
+                        onChange={(e) => setFormData({ ...formData, report_success: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Log Success (log and notify on successful checks)</span>
+                    </label>
+                  </div>
                   <div className="flex gap-2">
                     <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? 'Updating...' : 'Update'}
@@ -562,7 +665,7 @@ const Services = () => {
                       onClick={() => {
                         setShowEditModal(false);
                         setSelectedService(null);
-                        setFormData({ name: '', url: '', project_id: '' });
+                        setFormData({ name: '', url: '', project_id: '', auto_check: false, minute_interval: '', report_success: false });
                         setMessage('');
                       }}
                     >

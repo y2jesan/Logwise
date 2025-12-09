@@ -12,6 +12,7 @@ import servicesRoutes from './routes/services.js';
 import performanceRoutes from './routes/performance.js';
 import projectsRoutes from './routes/projects.js';
 import webhookRoutes from './routes/webhook.js';
+import { startAutoChecker } from './utils/autoChecker.js';
 
 dotenv.config();
 
@@ -42,7 +43,11 @@ app.use(cookieParser());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB'))
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
+    // Start auto-checker after MongoDB connection is established
+    startAutoChecker();
+  })
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Routes
